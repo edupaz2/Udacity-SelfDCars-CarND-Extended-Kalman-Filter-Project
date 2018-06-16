@@ -61,12 +61,17 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   float vx = x_(2);
   float vy = x_(3);
   float rho = sqrt(px*px + py*py);      // Range
-  float phi = atan2(py, px);                  // Bearing
+  float phi = atan2(py, px);            // Bearing
   float rho_dot = (px*vx + py*vy)/rho;  // Range rate
 
   VectorXd z_pred(3);
   z_pred << rho, phi, rho_dot;
   VectorXd y = z - z_pred;
+
+  // Angle normalization, adjusting phi between [-pi,pi]
+  while (y(1)> M_PI) y(1)-=2.*M_PI;
+  while (y(1)<-M_PI) y(1)+=2.*M_PI;
+
   MatrixXd Ht = H_.transpose();
   MatrixXd S = H_ * P_ * Ht + R_;
   MatrixXd Si = S.inverse();
